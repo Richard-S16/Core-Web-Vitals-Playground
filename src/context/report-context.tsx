@@ -1,14 +1,30 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+} from "react";
 import type { ReactNode } from "react";
 import type { PSIResponse } from "@/types/pagespeed";
 import type { AuditResult } from "@/types/metrics";
-import { getRating, formatMetricValue } from "@/types/metrics";
+import type { Suggestion } from "@/lib/suggestions-engine";
+import type { BundleData } from "@/lib/parse-bundle";
+import type { TimelineData } from "@/lib/parse-timeline";
+import { parseResponse } from "@/lib/parse-report";
+import { generateSuggestions } from "@/lib/suggestions-engine";
+import { parseBundleData } from "@/lib/parse-bundle";
+import { parseTimelineData } from "@/lib/parse-timeline";
 
 interface ReportContextValue {
   result: AuditResult | null;
   rawResponse: PSIResponse | null;
+  suggestions: Suggestion[];
+  bundleData: BundleData | null;
+  timelineData: TimelineData | null;
   isLoading: boolean;
   error: string | null;
   analyze: (url: string, strategy: "mobile" | "desktop") => Promise<void>;
@@ -17,150 +33,51 @@ interface ReportContextValue {
 
 const ReportContext = createContext<ReportContextValue | null>(null);
 
-const METRIC_MAP: {
-  auditId: string;
-  name: string;
-  abbreviation: string;
-  description: string;
-}[] = [
-  {
-    auditId: "largest-contentful-paint",
-    name: "Largest Contentful Paint",
-    abbreviation: "LCP",
-    description:
-      "Measures how long it takes for the largest content element to become visible. Aim for ≤2.5s.",
-  },
-  {
-    auditId: "cumulative-layout-shift",
-    name: "Cumulative Layout Shift",
-    abbreviation: "CLS",
-    description:
-      "Measures visual stability — how much the page layout shifts during loading. Aim for ≤0.1.",
-  },
-  {
-    auditId: "interaction-to-next-paint",
-    name: "Interaction to Next Paint",
-    abbreviation: "INP",
-    description:
-      "Measures responsiveness — how quickly the page responds to user interactions. Aim for ≤200ms.",
-  },
-  {
-    auditId: "first-contentful-paint",
-    name: "First Contentful Paint",
-    abbreviation: "FCP",
-    description:
-      "Measures when the first piece of content is rendered on screen. Aim for ≤1.8s.",
-  },
-  {
-    auditId: "total-blocking-time",
-    name: "Total Blocking Time",
-    abbreviation: "TBT",
-    description:
-      "Measures total time the main thread was blocked, preventing input responsiveness. Aim for ≤200ms.",
-  },
-  {
-    auditId: "speed-index",
-    name: "Speed Index",
-    abbreviation: "SI",
-    description:
-      "Measures how quickly content is visually displayed during page load. Aim for ≤3.4s.",
-  },
-];
+interface WorkerOutput {
+  result: AuditResult;
+  suggestions: Suggestion[];
+  bundleData: BundleData | null;
+  timelineData: TimelineData | null;
+}
 
-function parseResponse(
+function createParseWorker(): Worker | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return new Worker(
+      new URL("../workers/parse-report.worker.ts", import.meta.url)
+    );
+  } catch {
+    return null;
+  }
+}
+
+function parseOnMainThread(
   raw: PSIResponse,
   url: string,
   strategy: "mobile" | "desktop"
-): AuditResult {
-  const audits = raw.lighthouseResult.audits;
-  const perfScore =
-    (raw.lighthouseResult.categories.performance?.score ?? 0) * 100;
-
-  const metrics = METRIC_MAP.map((m) => {
-    const audit = audits[m.auditId];
-    const value = audit?.numericValue ?? 0;
-    return {
-      id: m.auditId,
-      name: m.name,
-      abbreviation: m.abbreviation,
-      value,
-      displayValue: audit?.displayValue ?? formatMetricValue(m.auditId, value),
-      rating: getRating(m.auditId, value),
-      description: m.description,
-    };
-  });
-
-  const fieldMetrics = raw.loadingExperience?.metrics
-    ? parseFieldData(raw)
-    : null;
-
-  return {
-    url,
-    strategy,
-    fetchTime: raw.lighthouseResult.fetchTime,
-    performanceScore: Math.round(perfScore),
-    metrics,
-    fieldData: fieldMetrics,
-  };
-}
-
-const FIELD_METRIC_MAP: Record<
-  string,
-  { name: string; abbreviation: string }
-> = {
-  LARGEST_CONTENTFUL_PAINT_MS: {
-    name: "Largest Contentful Paint",
-    abbreviation: "LCP",
-  },
-  CUMULATIVE_LAYOUT_SHIFT_SCORE: {
-    name: "Cumulative Layout Shift",
-    abbreviation: "CLS",
-  },
-  INTERACTION_TO_NEXT_PAINT: {
-    name: "Interaction to Next Paint",
-    abbreviation: "INP",
-  },
-  FIRST_CONTENTFUL_PAINT_MS: {
-    name: "First Contentful Paint",
-    abbreviation: "FCP",
-  },
-  FIRST_INPUT_DELAY_MS: { name: "First Input Delay", abbreviation: "FID" },
-  EXPERIMENTAL_TIME_TO_FIRST_BYTE: {
-    name: "Time to First Byte",
-    abbreviation: "TTFB",
-  },
-};
-
-function parseFieldData(raw: PSIResponse) {
-  const fieldMetrics = raw.loadingExperience?.metrics;
-  if (!fieldMetrics) return null;
-
-  return Object.entries(fieldMetrics)
-    .filter(([key]) => FIELD_METRIC_MAP[key])
-    .map(([key, value]) => {
-      const info = FIELD_METRIC_MAP[key];
-      const labels = ["Good", "Needs Improvement", "Poor"];
-      return {
-        id: key,
-        name: info.name,
-        abbreviation: info.abbreviation,
-        percentile: value.percentile,
-        category: value.category,
-        distributions: value.distributions.map(
-          (d: { min: number; max: number; proportion: number }, i: number) => ({
-            ...d,
-            label: labels[i] ?? "Unknown",
-          })
-        ),
-      };
-    });
+): WorkerOutput {
+  const result = parseResponse(raw, url, strategy);
+  const suggestions = generateSuggestions(result.metrics, raw);
+  const bundleData = parseBundleData(raw);
+  const timelineData = parseTimelineData(raw);
+  return { result, suggestions, bundleData, timelineData };
 }
 
 export function ReportProvider({ children }: { children: ReactNode }) {
   const [result, setResult] = useState<AuditResult | null>(null);
   const [rawResponse, setRawResponse] = useState<PSIResponse | null>(null);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [bundleData, setBundleData] = useState<BundleData | null>(null);
+  const [timelineData, setTimelineData] = useState<TimelineData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const workerRef = useRef<Worker | null>(null);
+
+  useEffect(() => {
+    return () => {
+      workerRef.current?.terminate();
+    };
+  }, []);
 
   const analyze = useCallback(
     async (url: string, strategy: "mobile" | "desktop") => {
@@ -168,6 +85,9 @@ export function ReportProvider({ children }: { children: ReactNode }) {
       setError(null);
       setResult(null);
       setRawResponse(null);
+      setSuggestions([]);
+      setBundleData(null);
+      setTimelineData(null);
 
       try {
         const response = await fetch("/api/analyze", {
@@ -180,14 +100,48 @@ export function ReportProvider({ children }: { children: ReactNode }) {
 
         if (!response.ok) {
           setError(data.error || `Analysis failed (${response.status})`);
+          setIsLoading(false);
           return;
         }
 
         setRawResponse(data);
-        setResult(parseResponse(data, url, strategy));
+
+        // Try Web Worker first, fall back to main thread
+        const worker = createParseWorker();
+        if (worker) {
+          workerRef.current = worker;
+          worker.onmessage = (e: MessageEvent<WorkerOutput>) => {
+            const { result, suggestions, bundleData, timelineData } = e.data;
+            setResult(result);
+            setSuggestions(suggestions);
+            setBundleData(bundleData);
+            setTimelineData(timelineData);
+            setIsLoading(false);
+            worker.terminate();
+            workerRef.current = null;
+          };
+          worker.onerror = () => {
+            // Fallback to main thread on worker error
+            const output = parseOnMainThread(data, url, strategy);
+            setResult(output.result);
+            setSuggestions(output.suggestions);
+            setBundleData(output.bundleData);
+            setTimelineData(output.timelineData);
+            setIsLoading(false);
+            worker.terminate();
+            workerRef.current = null;
+          };
+          worker.postMessage({ raw: data, url, strategy });
+        } else {
+          const output = parseOnMainThread(data, url, strategy);
+          setResult(output.result);
+          setSuggestions(output.suggestions);
+          setBundleData(output.bundleData);
+          setTimelineData(output.timelineData);
+          setIsLoading(false);
+        }
       } catch {
         setError("Network error — could not reach the analysis server.");
-      } finally {
         setIsLoading(false);
       }
     },
@@ -197,12 +151,25 @@ export function ReportProvider({ children }: { children: ReactNode }) {
   const reset = useCallback(() => {
     setResult(null);
     setRawResponse(null);
+    setSuggestions([]);
+    setBundleData(null);
+    setTimelineData(null);
     setError(null);
   }, []);
 
   return (
     <ReportContext.Provider
-      value={{ result, rawResponse, isLoading, error, analyze, reset }}
+      value={{
+        result,
+        rawResponse,
+        suggestions,
+        bundleData,
+        timelineData,
+        isLoading,
+        error,
+        analyze,
+        reset,
+      }}
     >
       {children}
     </ReportContext.Provider>

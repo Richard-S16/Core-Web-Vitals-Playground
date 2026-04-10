@@ -1,11 +1,22 @@
 "use client";
 
+import Link from "next/link";
 import { useReport } from "@/context/report-context";
 import { UrlInput } from "@/components/url-input";
 import { ResultsPanel } from "@/components/results-panel";
 
 export default function Home() {
-  const { result, rawResponse, isLoading, error, analyze, reset } = useReport();
+  const {
+    result,
+    rawResponse,
+    suggestions,
+    bundleData,
+    timelineData,
+    isLoading,
+    error,
+    analyze,
+    reset,
+  } = useReport();
 
   return (
     <div className="flex flex-1 flex-col items-center bg-zinc-50 font-sans dark:bg-zinc-950">
@@ -18,14 +29,22 @@ export default function Home() {
           >
             ⚡ CWV Playground
           </h1>
-          <a
-            href="https://web.dev/vitals/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-          >
-            What are Core Web Vitals?
-          </a>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/compare"
+              className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+            >
+              Compare
+            </Link>
+            <a
+              href="https://web.dev/vitals/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+            >
+              What are Core Web Vitals?
+            </a>
+          </div>
         </div>
       </header>
 
@@ -94,7 +113,16 @@ export default function Home() {
         )}
 
         {/* Show results */}
-        {result && <ResultsPanel result={result} rawResponse={rawResponse} onReset={reset} />}
+        {result && (
+          <ResultsPanel
+            result={result}
+            rawResponse={rawResponse}
+            suggestions={suggestions}
+            bundleData={bundleData}
+            timelineData={timelineData}
+            onReset={reset}
+          />
+        )}
       </main>
 
       {/* Footer */}
