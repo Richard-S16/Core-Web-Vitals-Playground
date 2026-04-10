@@ -1,3 +1,9 @@
+<img width="1914" height="1074" alt="page_1" src="https://github.com/user-attachments/assets/a8b63617-93e1-482c-b210-2fa183da7904" />
+
+<img width="1916" height="1071" alt="page analyzed" src="https://github.com/user-attachments/assets/1a28ca58-957a-464b-bc55-be3539c43aaf" />
+
+<img width="1916" height="1077" alt="page analyzed-2" src="https://github.com/user-attachments/assets/e73f6fca-c81e-4ba0-a218-570487002976" />
+
 # Core Web Vitals Playground
 
 A web app that analyzes any website's performance and explains **WHY** it is slow.
