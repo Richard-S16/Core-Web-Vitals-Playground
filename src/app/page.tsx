@@ -5,7 +5,7 @@ import { UrlInput } from "@/components/url-input";
 import { ResultsPanel } from "@/components/results-panel";
 
 export default function Home() {
-  const { result, isLoading, error, analyze, reset } = useReport();
+  const { result, rawResponse, isLoading, error, analyze, reset } = useReport();
 
   return (
     <div className="flex flex-1 flex-col items-center bg-zinc-50 font-sans dark:bg-zinc-950">
@@ -94,7 +94,7 @@ export default function Home() {
         )}
 
         {/* Show results */}
-        {result && <ResultsPanel result={result} onReset={reset} />}
+        {result && <ResultsPanel result={result} rawResponse={rawResponse} onReset={reset} />}
       </main>
 
       {/* Footer */}
