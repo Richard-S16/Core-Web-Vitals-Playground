@@ -13,7 +13,9 @@ import { MetricDistribution } from "./charts/metric-distribution";
 import { BundleTreemap } from "./charts/bundle-treemap";
 import { RenderTimeline } from "./charts/render-timeline";
 import { SuggestionsList } from "./suggestions-list";
+import { FixImpactTable } from "./fix-impact-table";
 import { generateSuggestions } from "@/lib/suggestions-engine";
+import { estimateFixImpacts } from "@/lib/fix-impact-estimator";
 import { parseBundleData } from "@/lib/parse-bundle";
 import { parseTimelineData } from "@/lib/parse-timeline";
 import { encodeReport } from "@/lib/report-codec";
@@ -27,13 +29,14 @@ interface ResultsPanelProps {
   onReset: () => void;
 }
 
-type Tab = "overview" | "metrics" | "bundle" | "timeline" | "suggestions";
+type Tab = "overview" | "metrics" | "bundle" | "timeline" | "suggestions" | "fix-impact";
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "overview", label: "Overview", icon: "📊" },
   { id: "metrics", label: "Metrics Detail", icon: "📈" },
   { id: "bundle", label: "Bundle Analysis", icon: "📦" },
   { id: "timeline", label: "Timeline", icon: "⏱️" },
+  { id: "fix-impact", label: "Fix Impact", icon: "🎯" },
   { id: "suggestions", label: "Suggestions", icon: "💡" },
 ];
 
@@ -77,6 +80,11 @@ export function ResultsPanel({
     () =>
       suggestionsFromProps ?? generateSuggestions(result.metrics, rawResponse),
     [suggestionsFromProps, result.metrics, rawResponse]
+  );
+
+  const fixImpacts = useMemo(
+    () => estimateFixImpacts(rawResponse),
+    [rawResponse]
   );
 
   const bundleData = useMemo(
@@ -201,6 +209,11 @@ export function ResultsPanel({
             {tab.id === "suggestions" && suggestions.length > 0 && (
               <span className="ml-1 rounded-full bg-red-500 px-1.5 py-0.5 text-xs leading-none text-white">
                 {suggestions.length}
+              </span>
+            )}
+            {tab.id === "fix-impact" && fixImpacts.length > 0 && (
+              <span className="ml-1 rounded-full bg-orange-500 px-1.5 py-0.5 text-xs leading-none text-white">
+                {fixImpacts.length}
               </span>
             )}
           </button>
@@ -374,6 +387,11 @@ export function ResultsPanel({
               </div>
             )}
           </div>
+        )}
+
+        {/* === FIX IMPACT TAB === */}
+        {activeTab === "fix-impact" && (
+          <FixImpactTable impacts={fixImpacts} />
         )}
 
         {/* === SUGGESTIONS TAB === */}

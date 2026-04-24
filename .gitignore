@@ -42,3 +42,5 @@ next-env.d.ts
 
 .github/
 PRD.md
+AGENTS.md
+CLAUDE.md
