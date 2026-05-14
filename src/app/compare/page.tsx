@@ -91,7 +91,6 @@ export default function ComparePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50 font-sans dark:bg-zinc-950">
-      {/* Header */}
       <header className="w-full border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <Link
@@ -107,7 +106,6 @@ export default function ComparePage() {
       </header>
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">
-        {/* Input Section */}
         <div className="grid gap-8 lg:grid-cols-2">
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
@@ -139,14 +137,12 @@ export default function ComparePage() {
           </div>
         </div>
 
-        {/* Compare chart */}
         {bothReady && (
           <div className="mt-8">
             <CompareBar resultA={stateA.result!} resultB={stateB.result!} />
           </div>
         )}
 
-        {/* Side-by-side scores + metrics */}
         {(stateA.result || stateB.result) && (
           <div className="mt-8 grid gap-8 lg:grid-cols-2">
             {[stateA.result, stateB.result].map((result, idx) => {
@@ -155,7 +151,6 @@ export default function ComparePage() {
               const scoreRing = getScoreRing(result.performanceScore);
               return (
                 <div key={idx} className="space-y-4">
-                  {/* Score */}
                   <div className="flex items-center gap-4 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
                     <div
                       className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 ring-4 ${scoreRing}`}
@@ -176,7 +171,6 @@ export default function ComparePage() {
                     </div>
                   </div>
 
-                  {/* Metric cards */}
                   <div className="grid gap-3 sm:grid-cols-2">
                     {result.metrics.map((metric) => (
                       <MetricCard key={metric.id} {...metric} />

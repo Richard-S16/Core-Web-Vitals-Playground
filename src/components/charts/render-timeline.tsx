@@ -37,7 +37,6 @@ export function RenderTimeline({ data }: RenderTimelineProps) {
         Total: {formatDuration(data.totalDuration)} of main-thread work
       </p>
 
-      {/* Stacked bar overview */}
       <div className="mb-6 flex h-8 w-full overflow-hidden rounded-lg">
         {data.categories.map((cat) => (
           <div
@@ -53,7 +52,6 @@ export function RenderTimeline({ data }: RenderTimelineProps) {
         ))}
       </div>
 
-      {/* Detailed bar chart */}
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={chartData} layout="vertical" barCategoryGap="15%">
           <XAxis
@@ -93,7 +91,6 @@ export function RenderTimeline({ data }: RenderTimelineProps) {
         </BarChart>
       </ResponsiveContainer>
 
-      {/* Legend */}
       <div className="mt-3 flex flex-wrap items-center justify-center gap-4 text-xs text-zinc-500 dark:text-zinc-400">
         {data.categories.slice(0, 6).map((cat) => (
           <div key={cat.group} className="flex items-center gap-1.5">

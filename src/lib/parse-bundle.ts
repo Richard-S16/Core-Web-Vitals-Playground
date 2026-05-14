@@ -41,7 +41,6 @@ function isFirstParty(scriptUrl: string, pageUrl: string): boolean {
   try {
     const scriptHost = new URL(scriptUrl).hostname;
     const pageHost = new URL(pageUrl).hostname;
-    // Match root domain (e.g., sub.example.com matches example.com)
     const getRootDomain = (host: string) => {
       const parts = host.split(".");
       return parts.length >= 2 ? parts.slice(-2).join(".") : host;

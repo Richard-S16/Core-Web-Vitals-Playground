@@ -63,7 +63,6 @@ export function SuggestionsList({ suggestions }: SuggestionsListProps) {
 
   return (
     <div className="space-y-4">
-      {/* Summary */}
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
           {suggestions.length} suggestion{suggestions.length !== 1 ? "s" : ""}
@@ -85,7 +84,6 @@ export function SuggestionsList({ suggestions }: SuggestionsListProps) {
         )}
       </div>
 
-      {/* Suggestion cards */}
       {suggestions.map((suggestion) => {
         const styles = SEVERITY_STYLES[suggestion.severity];
         const isExpanded = expandedId === suggestion.id;

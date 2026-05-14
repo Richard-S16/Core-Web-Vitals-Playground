@@ -73,7 +73,6 @@ export function FixImpactTable({ impacts }: FixImpactTableProps) {
 
   return (
     <div className="space-y-4">
-      {/* Explanation banner */}
       <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-900/50 dark:bg-blue-950/20 dark:text-blue-300">
         <span className="font-semibold">How are these estimates calculated?</span>{" "}
         Time savings are derived from PageSpeed Insights audit data/byte
@@ -82,7 +81,6 @@ export function FixImpactTable({ impacts }: FixImpactTableProps) {
         are directional estimates, not guarantees.
       </div>
 
-      {/* Desktop table */}
       <div className="hidden overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 md:block">
         <table className="w-full text-sm">
           <thead>
@@ -136,7 +134,6 @@ export function FixImpactTable({ impacts }: FixImpactTableProps) {
         </table>
       </div>
 
-      {/* Mobile card list */}
       <div className="space-y-3 md:hidden">
         {impacts.map((item, i) => {
           const style = METRIC_STYLES[item.metric];
@@ -166,7 +163,6 @@ export function FixImpactTable({ impacts }: FixImpactTableProps) {
         })}
       </div>
 
-      {/* Summary stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {(["LCP", "TBT", "FCP", "CLS"] as const).map((metric) => {
           const metricImpacts = impacts.filter((i) => i.metric === metric);
