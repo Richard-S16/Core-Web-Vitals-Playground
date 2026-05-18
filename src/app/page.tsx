@@ -20,6 +20,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-1 flex-col items-center bg-zinc-50 font-sans dark:bg-zinc-950">
+      {/* Header */}
       <header className="w-full border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <h1
@@ -48,6 +49,7 @@ export default function Home() {
       </header>
 
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-center px-6 py-12">
+        {/* Show landing / input when no result */}
         {!result && (
           <div className="flex flex-1 flex-col items-center justify-center gap-8">
             <div className="text-center">
@@ -74,6 +76,7 @@ export default function Home() {
               </div>
             )}
 
+            {/* Feature highlights */}
             <div className="mt-8 grid w-full max-w-2xl gap-4 sm:grid-cols-3">
               {[
                 {
@@ -109,6 +112,7 @@ export default function Home() {
           </div>
         )}
 
+        {/* Show results */}
         {result && (
           <ResultsPanel
             result={result}
@@ -121,6 +125,7 @@ export default function Home() {
         )}
       </main>
 
+      {/* Footer */}
       <footer className="w-full border-t border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
         <div className="mx-auto max-w-6xl px-6 py-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
           Powered by{" "}

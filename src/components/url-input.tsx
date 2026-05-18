@@ -30,6 +30,7 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
       return;
     }
 
+    // Prepend https:// if no protocol specified
     const withProtocol = /^https?:\/\//i.test(trimmed)
       ? trimmed
       : `https://${trimmed}`;
@@ -92,6 +93,7 @@ export function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
         </button>
       </div>
 
+      {/* Strategy toggle */}
       <div className="flex items-center gap-4">
         <span className="text-sm text-zinc-500 dark:text-zinc-400">
           Strategy:

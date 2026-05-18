@@ -106,6 +106,7 @@ export function ReportProvider({ children }: { children: ReactNode }) {
 
         setRawResponse(data);
 
+        // Try Web Worker first, fall back to main thread
         const worker = createParseWorker();
         if (worker) {
           workerRef.current = worker;
@@ -120,6 +121,7 @@ export function ReportProvider({ children }: { children: ReactNode }) {
             workerRef.current = null;
           };
           worker.onerror = () => {
+            // Fallback to main thread on worker error
             const output = parseOnMainThread(data, url, strategy);
             setResult(output.result);
             setSuggestions(output.suggestions);

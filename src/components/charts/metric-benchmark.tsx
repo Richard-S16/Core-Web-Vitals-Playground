@@ -26,6 +26,7 @@ const RATING_COLORS: Record<MetricRating, string> = {
 function normalizeValue(metric: CoreMetric): number {
   const threshold = METRIC_THRESHOLDS[metric.id];
   if (!threshold) return 50;
+  // Normalize to percentage of "poor" threshold so bars are comparable
   return Math.min((metric.value / threshold.poor) * 100, 200);
 }
 

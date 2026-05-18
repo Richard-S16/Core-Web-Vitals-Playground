@@ -33,6 +33,7 @@ export interface FieldMetric {
   }[];
 }
 
+// CWV thresholds per https://web.dev/vitals/
 export const METRIC_THRESHOLDS: Record<
   string,
   { good: number; poor: number; unit: string }

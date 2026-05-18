@@ -173,6 +173,7 @@ export function generateSuggestions(
 ): Suggestion[] {
   const suggestions: Suggestion[] = [];
 
+  // Rule-based suggestions from metric values
   for (const rule of SUGGESTION_RULES) {
     const metric = metrics.find((m) => m.id === rule.metricId);
     if (metric && rule.condition(metric)) {
@@ -187,12 +188,14 @@ export function generateSuggestions(
     }
   }
 
+  // PSI audit-based suggestions (opportunities with savings)
   if (raw?.lighthouseResult?.audits) {
     const audits = raw.lighthouseResult.audits;
     for (const [auditId, config] of Object.entries(PSI_AUDIT_SUGGESTIONS)) {
       const audit = audits[auditId] as unknown as PSIOpportunity | undefined;
       if (!audit) continue;
 
+      // Only include audits that failed (score < 1) or have savings
       const hasIssue =
         (audit.score !== null && audit.score !== undefined && audit.score < 0.9) ||
         (audit.details?.overallSavingsMs && audit.details.overallSavingsMs > 0);
@@ -216,6 +219,7 @@ export function generateSuggestions(
     }
   }
 
+  // Sort by severity: high → medium → low
   const severityOrder: Record<SuggestionSeverity, number> = {
     high: 0,
     medium: 1,

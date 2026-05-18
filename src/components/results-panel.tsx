@@ -123,6 +123,7 @@ export function ResultsPanel({
 
   return (
     <div className="w-full max-w-5xl space-y-6">
+      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
@@ -157,6 +158,7 @@ export function ResultsPanel({
         </div>
       </div>
 
+      {/* Performance Score */}
       <div className="flex items-center gap-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
         <div
           className={`flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-full border-4 ring-4 ${scoreRing}`}
@@ -190,6 +192,7 @@ export function ResultsPanel({
         )}
       </div>
 
+      {/* Tab Navigation */}
       <div className="flex gap-1 overflow-x-auto rounded-xl border border-zinc-200 bg-white p-1 dark:border-zinc-800 dark:bg-zinc-900">
         {TABS.map((tab) => (
           <button
@@ -217,9 +220,12 @@ export function ResultsPanel({
         ))}
       </div>
 
+      {/* Tab Content */}
       <div>
+        {/* === OVERVIEW TAB === */}
         {activeTab === "overview" && (
           <div className="space-y-6">
+            {/* Radar chart + Benchmark side by side on desktop */}
             <div className="grid gap-6 lg:grid-cols-2">
               <PerformanceOverview
                 metrics={result.metrics}
@@ -228,6 +234,7 @@ export function ResultsPanel({
               <MetricBenchmark metrics={result.metrics} />
             </div>
 
+            {/* Core Web Vitals cards */}
             <div>
               <h3 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
                 Core Web Vitals
@@ -247,6 +254,7 @@ export function ResultsPanel({
               </div>
             </div>
 
+            {/* Other metrics */}
             <div>
               <h3 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
                 Other Metrics
@@ -269,8 +277,10 @@ export function ResultsPanel({
           </div>
         )}
 
+        {/* === METRICS DETAIL TAB === */}
         {activeTab === "metrics" && (
           <div className="space-y-6">
+            {/* All metric cards */}
             <div>
               <h3 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
                 All Lab Metrics
@@ -282,10 +292,12 @@ export function ResultsPanel({
               </div>
             </div>
 
+            {/* Field data distribution chart */}
             {result.fieldData && result.fieldData.length > 0 && (
               <MetricDistribution fieldData={result.fieldData} />
             )}
 
+            {/* Field data cards */}
             {result.fieldData && result.fieldData.length > 0 && (
               <div>
                 <h3 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
@@ -339,6 +351,7 @@ export function ResultsPanel({
           </div>
         )}
 
+        {/* === BUNDLE ANALYSIS TAB === */}
         {activeTab === "bundle" && (
           <div className="space-y-6">
             {bundleData ? (
@@ -357,6 +370,7 @@ export function ResultsPanel({
           </div>
         )}
 
+        {/* === TIMELINE TAB === */}
         {activeTab === "timeline" && (
           <div className="space-y-6">
             {timelineData ? (
@@ -375,10 +389,12 @@ export function ResultsPanel({
           </div>
         )}
 
+        {/* === FIX IMPACT TAB === */}
         {activeTab === "fix-impact" && (
           <FixImpactTable impacts={fixImpacts} />
         )}
 
+        {/* === SUGGESTIONS TAB === */}
         {activeTab === "suggestions" && (
           <SuggestionsList suggestions={suggestions} />
         )}

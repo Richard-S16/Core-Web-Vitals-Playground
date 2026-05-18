@@ -21,10 +21,13 @@ function metricToScore(metric: CoreMetric): number {
   const threshold = METRIC_THRESHOLDS[metric.id];
   if (!threshold) return 50;
 
+  // Convert to 0-100 score where 100 = best
   if (metric.value <= threshold.good) return 100;
   if (metric.value >= threshold.poor) {
+    // Scale from 0-30 for values beyond poor
     return Math.max(0, 30 - ((metric.value - threshold.poor) / threshold.poor) * 30);
   }
+  // Linear interpolation between good (100) and poor (30)
   const ratio =
     (metric.value - threshold.good) / (threshold.poor - threshold.good);
   return Math.round(100 - ratio * 70);

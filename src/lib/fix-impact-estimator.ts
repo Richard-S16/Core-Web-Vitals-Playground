@@ -1,8 +1,12 @@
 import type { PSIResponse } from "@/types/pagespeed";
 
-
+/**
+ * Approximate mobile network throughput used for converting byte savings to
+ * estimated time savings: 1.5 Mbps ≈ 1 500 bytes/ms.
+ */
 const BYTES_PER_MS = 1500;
 
+/** Subset of a Lighthouse audit object that we need for impact calculations. */
 interface AuditWithDetails {
   score?: number | null;
   numericValue?: number;
@@ -19,7 +23,9 @@ export interface FixImpact {
   auditId: string;
   recommendation: string;
   metric: "LCP" | "CLS" | "INP" | "TBT" | "FCP";
+  /** Estimated reduction magnitude (positive = improvement). ms for time metrics, raw score for CLS. */
   estimatedImpact: number;
+  /** Human-readable string, e.g. "−0.8 s", "−120 ms", "−0.12". */
   formattedImpact: string;
 }
 
@@ -31,6 +37,7 @@ type ImpactRule = {
 };
 
 const IMPACT_RULES: ImpactRule[] = [
+  // ─── LCP opportunities ────────────────────────────────────────────────────
   {
     auditId: "render-blocking-resources",
     recommendation: "Eliminate render-blocking resources",
@@ -47,6 +54,7 @@ const IMPACT_RULES: ImpactRule[] = [
     recommendation: "Reduce initial server response time (TTFB)",
     metric: "LCP",
     calculate: (a) => {
+      // numericValue is total TTFB in ms; the target is ≤600 ms
       if (
         a.numericUnit === "millisecond" &&
         a.numericValue != null &&
@@ -121,6 +129,7 @@ const IMPACT_RULES: ImpactRule[] = [
     },
   },
 
+  // ─── TBT opportunities ────────────────────────────────────────────────────
   {
     auditId: "unused-javascript",
     recommendation: "Reduce unused JavaScript",
@@ -128,6 +137,7 @@ const IMPACT_RULES: ImpactRule[] = [
     calculate: (a) => {
       const ms = a.details?.overallSavingsMs;
       if (ms != null && ms > 50) return ms;
+      // Fallback: estimate parse + eval time from byte count (~1 ms/KB)
       const bytes = a.numericUnit === "byte" ? a.numericValue : null;
       if (bytes == null) return null;
       const est = bytes / 1024;
@@ -156,11 +166,13 @@ const IMPACT_RULES: ImpactRule[] = [
         a.details?.overallSavingsBytes ??
         (a.numericUnit === "byte" ? a.numericValue : null);
       if (bytes == null) return null;
+      // Legacy JS is slower to parse; apply a 1.5× multiplier
       const ms = (bytes / 1024) * 1.5;
       return ms > 50 ? ms : null;
     },
   },
 
+  // ─── FCP opportunities ────────────────────────────────────────────────────
   {
     auditId: "unused-css-rules",
     recommendation: "Remove unused CSS",
@@ -201,6 +213,7 @@ const IMPACT_RULES: ImpactRule[] = [
     },
   },
 
+  // ─── CLS opportunities ────────────────────────────────────────────────────
   {
     auditId: "unsized-images",
     recommendation: "Add explicit width & height to all images",
@@ -208,6 +221,7 @@ const IMPACT_RULES: ImpactRule[] = [
     calculate: (a) => {
       const items = a.details?.items;
       if (items && items.length > 0) {
+        // ~0.05 CLS reduction per unsized image, capped at 0.25
         return Math.min(items.length * 0.05, 0.25);
       }
       if (typeof a.score === "number" && a.score < 0.9) return 0.05;
@@ -239,6 +253,10 @@ function formatImpact(metric: FixImpact["metric"], value: number): string {
   return `−${Math.round(value)} ms`;
 }
 
+/**
+ * Derive a prioritised list of fix-impact estimates from a raw PSI response.
+ * Sorted by estimated impact descending (most impactful fix first).
+ */
 export function estimateFixImpacts(raw: PSIResponse | null): FixImpact[] {
   if (!raw?.lighthouseResult?.audits) return [];
 
@@ -249,6 +267,7 @@ export function estimateFixImpacts(raw: PSIResponse | null): FixImpact[] {
     const audit = audits[rule.auditId] as AuditWithDetails | undefined;
     if (!audit) continue;
 
+    // Only process audits that actually failed
     const isIssue =
       audit.score === null ||
       audit.score === undefined ||
@@ -267,6 +286,7 @@ export function estimateFixImpacts(raw: PSIResponse | null): FixImpact[] {
     });
   }
 
+  // Normalise for sorting: treat 1 CLS unit ≈ 1000 ms equivalent
   impacts.sort((a, b) => {
     const aVal =
       a.metric === "CLS" ? a.estimatedImpact * 1000 : a.estimatedImpact;
